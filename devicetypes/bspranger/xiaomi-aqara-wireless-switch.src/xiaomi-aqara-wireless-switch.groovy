@@ -1,7 +1,7 @@
 /**
  *  Aqara Wireless Smart Light Switch models WXKG02LM / WXKG03LM (2016 & 2018 revisions)
  *  Device Handler for SmartThings
- *  Version 0.1.0
+ *  Version 0.9.2
  *
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
@@ -15,7 +15,6 @@
  *
  *  Based on original device handler code by a4refillpad, adapted by bspranger, then rewritten and updated for changes in firmware 25.20 by veeceeoh
  *  Additional contributions to code by alecm, alixjg, bspranger, gn0st1c, foz333, jmagnuson, rinkek, ronvandegraaf, snalee, tmleafs, twonk, veeceeoh, & xtianpaiva
- *  - macedonia21 maps button and action to reconize clicked button
  *
  *  Notes on capabilities of the different models:
  *  Model WXKG03LM (1 button) - 2016 Revision (lumi.sensor_86sw1lu):
@@ -74,7 +73,7 @@
 		attribute "lastReleased", "string"
 		attribute "lastReleasedCoRE", "string"
 		attribute "batteryRuntime", "string"
-		attribute "buttonStatus", "enum", ["pushed", "held", "single-clicked", "double-clicked", "shaken", "released"]
+		attribute "buttonStatus", "enum", ["pushed", "held", "single-clicked", "double-clicked", "shaken", "released", "pushed_2x", "pushed_3x"]
 
 		// Aqara Smart Light Switch - single button - model WXKG03LM (2016 revision)
 		fingerprint deviceId: "5F01", inClusters: "0000,0003,0019,0012,FFFF", outClusters: "0000,0003,0004,0005,0019,0012,FFFF", manufacturer: "LUMI", model: "lumi.sensor_86sw1lu", deviceJoinName: "Aqara Switch WXKG03LM (2016)"
@@ -232,11 +231,12 @@ private Map parseReadAttrMessage(String description) {
 private mapButtonEvent(buttonValue, actionValue) {
 	// buttonValue (message endpoint) 1 = left, 2 = right, 3 = both (and 0 = virtual app button)
 	// actionValue (message value) 0 = hold, 1 = push, 2 = double-click (hold & double-click on 2018 revision only)
-	def keyComb = 3 * (buttonValue - 1) + actionValue
+    def keyComb = 3 * (buttonValue - 1) + actionValue
+    displayDebugLog("Key combi index: $keyComb")
 	def whichButtonText = ["Virtual button was", ((state.numButtons < 3) ? "Button was" : "Left button was"), "Right button was", "Both buttons were"]
 	def statusButton = ["", ((state.numButtons < 3) ? "" : "left"), "right", "both"]
 	def pressType = ["held", "pushed", "pushed_2x", "pushed_3x", "pushed_4x", "pushed_5x", "", "pushed_6x"]
-    	def lastPressTypeList = ["Held", "Pressed", "Pressed 2 times", "Pressed 3 times", "Pressed 4 times", "Pressed 5 times", "", "Pressed 6 times"]
+    def lastPressTypeList = ["Held", "Pressed", "Pressed 2 times", "Pressed 3 times", "Pressed 4 times", "Pressed 5 times", "", "Pressed 6 times"]
 	def eventType = pressType[keyComb]
 	def lastPressType = lastPressTypeList[keyComb]
 	def buttonNum = (buttonValue == 0 ? 1 : buttonValue) + (actionValue == 2 ? 3 : 0)
